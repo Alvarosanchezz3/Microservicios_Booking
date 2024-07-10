@@ -39,3 +39,7 @@ Para configurar el proyecto, es necesario crear un archivo `.env` en la raíz de
 - EUREKA_PASSWORD=your_eureka_password
 - secret_key=your_secret_key
 - activeProfile=your_active_profile
+
+## Diagrama de la arquitectura
+
+https://github.com/Alvarosanchezz3/Microservicios_Booking/assets/99328696/d5d95507-81c6-4afa-a876-8741a0ecf2a5
