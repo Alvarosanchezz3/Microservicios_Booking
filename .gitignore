@@ -1,0 +1,20 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+

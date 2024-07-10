@@ -1,0 +1,203 @@
+version: '3.9'
+
+networks:
+  msvc-booking:
+    driver: bridge
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper-server
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+    networks:
+      - msvc-booking
+
+  kafka-server:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka-server
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-server:9092,PLAINTEXT_INTERNAL://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    networks:
+      - msvc-booking
+
+  config-server:
+    image: config-server-booking-img
+    container_name: config-server-booking
+    ports:
+      - "8888:8888"
+    networks:
+      - msvc-booking
+  eureka-server:
+    image: eureka-server-booking-img
+    container_name: eureka-server-booking
+    ports:
+      - "8761:8761"
+    env_file:
+      - .env
+    environment:
+      ACTIVE_PROFILE: ${activeProfile}
+    depends_on:
+      - config-server
+    networks:
+      - msvc-booking
+
+  servicio-MySQL:
+    image: mysql
+    container_name: msvc-booking-mysql
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: msvc_users_califications
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    restart: always
+    networks:
+      - msvc-booking
+  servicio-PostgreSQL:
+    image: postgres
+    container_name: msvc-booking-postgresql
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: msvc_hotel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: always
+    networks:
+      - msvc-booking
+
+  zipkin-server:
+    image: zipkin-img
+    ports:
+      - "9411:9411"
+    container_name: zipkin-server-booking
+    environment:
+      STORAGE_TYPE: mysql
+      MYSQL_HOST: servicio-MySQL
+      MYSQL_USER: root
+      MYSQL_PASS: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_TLS: true
+    restart: always
+    depends_on:
+      - servicio-MySQL
+    networks:
+      - msvc-booking
+
+  gateway-server:
+    image: gateway-server-booking-img
+    container_name: api-gateway-booking
+    env_file:
+      - .env
+    environment:
+      secret_key: ${secret_key}
+      ACTIVE_PROFILE: ${activeProfile}
+      EUREKA_USERNAME: ${EUREKA_USERNAME}
+      EUREKA_PASSWORD: ${EUREKA_PASSWORD}
+    ports:
+      - "8086:8086"
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - msvc-booking
+  auth-service:
+    image: auth-service-booking-img
+    container_name: auth-service-booking
+    env_file:
+      - .env
+    environment:
+      secret_key: ${secret_key}
+      ACTIVE_PROFILE: ${activeProfile}
+      EUREKA_USERNAME: ${EUREKA_USERNAME}
+      EUREKA_PASSWORD: ${EUREKA_PASSWORD}
+    ports:
+      - "8084:8084"
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - msvc-booking
+  usuario-service:
+    image: usuario-service-booking-img
+    container_name: usuario-service-booking
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ACTIVE_PROFILE: ${activeProfile}
+      EUREKA_USERNAME: ${EUREKA_USERNAME}
+      EUREKA_PASSWORD: ${EUREKA_PASSWORD}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - kafka-server
+      - eureka-server
+      - config-server
+      - servicio-MySQL
+    networks:
+      - msvc-booking
+  email-service:
+    image: email-service-booking-img
+    container_name: email-service-booking
+    ports:
+      - "8085:8085"
+    env_file:
+      - .env
+    environment:
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      ACTIVE_PROFILE: ${activeProfile}
+    depends_on:
+      - config-server
+      - eureka-server
+      - kafka-server
+    networks:
+      - msvc-booking
+  hotel-service:
+    image: hotel-service-booking-img
+    container_name: hotel-service-booking
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      ACTIVE_PROFILE: ${activeProfile}
+      EUREKA_USERNAME: ${EUREKA_USERNAME}
+      EUREKA_PASSWORD: ${EUREKA_PASSWORD}
+    depends_on:
+      - config-server
+      - eureka-server
+      - servicio-PostgreSQL
+    networks:
+      - msvc-booking
+  calificacion-service:
+    image: calificacion-service-booking-img
+    container_name: calificacion-service-booking
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env
+    environment:
+      ACTIVE_PROFILE: ${activeProfile}
+      EUREKA_USERNAME: ${EUREKA_USERNAME}
+      EUREKA_PASSWORD: ${EUREKA_PASSWORD}
+    depends_on:
+      - config-server
+      - eureka-server
+      - servicio-MySQL
+    networks:
+      - msvc-booking

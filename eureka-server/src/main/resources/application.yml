@@ -1,0 +1,14 @@
+server:
+  port: 8761
+
+app:
+  eureka:
+    username: ${EUREKA_USERNAME}
+    password: ${EUREKA_PASSWORD}
+
+spring:
+  application:
+    name: eureka-server
+  profiles:
+    active: ${activeProfile}
+
