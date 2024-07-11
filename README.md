@@ -42,4 +42,4 @@ Para configurar el proyecto, es necesario crear un archivo `.env` en la raíz de
 
 ## Diagrama de la arquitectura
 
-![Diagrama microservicios booking](https://github.com/Alvarosanchezz3/Microservicios_Booking/assets/99328696/197934c6-dda0-44b3-a4b9-cee88194beb2)
+![Diagrama de microservicios](https://github.com/Alvarosanchezz3/Microservicios_Booking/assets/99328696/b328a68a-1ef9-4ae1-97be-5d1b875f4e10)
